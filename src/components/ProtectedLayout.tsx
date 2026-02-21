@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Button } from './ui/button'
-import { LayoutDashboard, Upload, User, LogOut } from 'lucide-react'
+import { Home, LayoutDashboard, Upload, User, LogOut } from 'lucide-react'
 import { cn } from '../lib/utils'
 
 export default function ProtectedLayout() {
@@ -9,6 +9,7 @@ export default function ProtectedLayout() {
     const location = useLocation()
 
     const navItems = [
+        { href: '/', label: 'Home', icon: Home },
         { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/upload', label: 'Upload', icon: Upload },
         { href: '/profile', label: 'Profile', icon: User },
