@@ -349,6 +349,15 @@ export default function LandingPage() {
                                 Empowering students to share knowledge and ace their exams together.
                             </p>
                         </div>
+                        <p>© 2026 NotesPathv. All rights reserved.</p>
+                        <p className="flex items-center gap-1">
+                            <span>Made with</span>
+                            <span className="text-rose-500">❤️</span>
+                            <span>by</span>
+                            <a href="https://anishlandage.fun" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-black transition-colors font-medium">
+                                Anish Landage
+                            </a>
+                        </p>
 
                         {/* <div className="flex items-center gap-6 text-sm text-gray-500 font-medium">
                             <a href="#" className="hover:text-blue-600 transition-colors">About</a>
@@ -359,13 +368,7 @@ export default function LandingPage() {
                     </div>
 
                     <div className="mt-8 pt-8 border-t border-gray-200/50 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-400">
-                        <p>© 2026 NotesPathv. All rights reserved.</p>
-                        <p className="flex items-center ">
-                            Made with <span className="text-rose-500">❤️</span> by
-                            <a href="https://anishlandage.fun" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-black transition-colors font-medium">
-                                Anish Landage
-                            </a>
-                        </p>
+
                     </div>
                 </div>
             </footer>
