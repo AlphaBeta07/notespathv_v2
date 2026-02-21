@@ -16,76 +16,52 @@ export default function ProtectedLayout() {
 
     return (
         <div className="min-h-screen flex flex-col bg-background">
-            {/* Top Navigation Bar */}
-            <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-md border-b border-border shadow-sm">
-                <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+            {/* Floating Navigation Bar */}
+            <header className="fixed bottom-4 md:bottom-10 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl bg-white/30 backdrop-blur-xl px-2 md:px-6 h-[72px] md:h-16 flex items-center justify-between border border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] rounded-[2rem] md:rounded-full supports-[backdrop-filter]:bg-white/20 transition-all hover:bg-white/40 hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.1)]">
 
-                    {/* Logo */}
-                    <Link to="/" className="flex items-center gap-2">
-                        <div className="bg-accent/40 px-6 py-2 rounded-full border border-accent shadow-sm">
-                            <span className="font-bold text-lg tracking-tight text-foreground">
-                                Notes<span className="text-primary">Pathv</span>
-                            </span>
-                        </div>
-                    </Link>
+                {/* Logo (Hidden on mobile to prioritize nav items) */}
+                <Link to="/" className="hidden md:flex items-center gap-2 pl-2 md:pl-0 shrink-0">
+                    <span className="font-bold text-lg md:text-xl tracking-tight text-gray-900 drop-shadow-sm">
+                        Notes<span className="text-blue-600">Pathv</span>
+                    </span>
+                </Link>
 
-                    {/* Navigation Links (Desktop) */}
-                    <nav className="hidden md:flex items-center gap-1">
-                        {navItems.map((item) => (
-                            <Link
-                                key={item.href}
-                                to={item.href}
-                                className={cn(
-                                    "flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200",
-                                    location.pathname === item.href
-                                        ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-secondary/50"
-                                )}
-                            >
-                                <item.icon className="h-4 w-4" />
-                                {item.label}
-                            </Link>
-                        ))}
-                    </nav>
+                {/* Navigation Links */}
+                <nav className="flex items-center justify-between w-full md:w-auto md:gap-2 px-1">
+                    {navItems.map((item) => (
+                        <Link
+                            key={item.href}
+                            to={item.href}
+                            className={cn(
+                                "flex flex-col md:flex-row items-center justify-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 text-[10px] md:text-sm font-medium transition-all duration-200 rounded-2xl md:rounded-full min-w-[64px]",
+                                location.pathname === item.href
+                                    ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
+                                    : "text-gray-700 hover:text-gray-900 hover:bg-white/50"
+                            )}
+                        >
+                            <item.icon className="h-5 w-5 md:h-4 md:w-4" />
+                            <span>{item.label}</span>
+                        </Link>
+                    ))}
 
-                    {/* Logout / Profile Actions */}
-                    <div className="flex items-center gap-2">
+                    {/* Logout Action integrated into nav on mobile */}
+                    <div className="flex justify-center md:border-l md:border-gray-300 md:pl-2 ml-1">
                         <Button
                             variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-2"
+                            className="flex flex-col md:flex-row h-auto items-center justify-center gap-1 md:gap-2 px-3 md:px-4 py-1.5 md:py-2 text-[10px] md:text-sm text-gray-700 hover:text-red-600 hover:bg-white/50 rounded-2xl md:rounded-full transition-colors min-w-[64px]"
                             onClick={signOut}
                         >
-                            <LogOut className="h-4 w-4" />
-                            <span className="hidden sm:inline">Logout</span>
+                            <LogOut className="h-5 w-5 md:h-4 md:w-4" />
+                            <span>Logout</span>
                         </Button>
                     </div>
-                </div>
+                </nav>
             </header>
 
             {/* Main Content Area */}
-            <main className="flex-1 container mx-auto p-4 md:p-6 lg:p-8 animate-in fade-in duration-500">
+            <main className="flex-1 container mx-auto p-4 md:p-6 lg:p-8 animate-in fade-in duration-500 pb-32 md:pb-40">
                 <Outlet />
             </main>
-
-            {/* Mobile Bottom Nav (Optional, helpful for mobile) */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 px-4 py-2 flex justify-around items-center">
-                {navItems.map((item) => (
-                    <Link
-                        key={item.href}
-                        to={item.href}
-                        className={cn(
-                            "flex flex-col items-center gap-1 p-2 rounded-lg text-xs font-medium transition-colors",
-                            location.pathname === item.href
-                                ? "text-primary"
-                                : "text-muted-foreground hover:text-foreground"
-                        )}
-                    >
-                        <item.icon className="h-5 w-5" />
-                        {item.label}
-                    </Link>
-                ))}
-            </div>
         </div>
     )
 }

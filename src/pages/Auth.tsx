@@ -29,6 +29,9 @@ export default function AuthPage() {
                 if (error) throw error
                 navigate('/dashboard')
             } else {
+                if (!email.toLowerCase().endsWith('@gmail.com')) {
+                    throw new Error("Please enter valid email to sign up.")
+                }
                 const { error } = await supabase.auth.signUp({
                     email,
                     password,
@@ -86,7 +89,7 @@ export default function AuthPage() {
                                     <Mail className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
                                     <Input
                                         type="email"
-                                        placeholder="m@example.com"
+                                        placeholder="m@gmail.com"
                                         required
                                         value={email}
                                         onChange={(e) => setEmail(e.target.value)}

@@ -113,31 +113,31 @@ export default function LandingPage() {
         <div className="flex min-h-screen flex-col relative overflow-hidden">
             <DotBackground />
 
-            {/* HEADER */}
-            <header className="sticky top-0 z-50 w-full bg-white/70 backdrop-blur-md px-4 lg:px-6 h-16 flex items-center justify-between border-b border-gray-100/50 supports-[backdrop-filter]:bg-white/50">
+            {/* Floating Navigation Bar */}
+            <header className="fixed bottom-4 md:bottom-10 left-1/2 -translate-x-1/2 z-50 w-[95%] max-w-5xl bg-white/30 backdrop-blur-xl px-2 md:px-6 h-auto min-h-[64px] py-1.5 flex items-center justify-between border border-white/50 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] rounded-[2rem] md:rounded-full supports-[backdrop-filter]:bg-white/20 transition-all hover:bg-white/40 hover:shadow-[0_8px_32px_0_rgba(31,38,135,0.1)] gap-2">
                 {/* Logo Area */}
-                <div className="flex items-center">
-                    <div className="flex items-center gap-2">
-                        <span className="font-bold text-xl tracking-tight text-gray-900">
+                <div className="flex items-center shrink-0">
+                    <div className="flex items-center gap-1 md:gap-2 px-2 md:px-0">
+                        <span className="font-bold text-sm md:text-xl tracking-tight text-gray-900 drop-shadow-sm">
                             Notes<span className="text-blue-600">Pathv</span>
                         </span>
                     </div>
                 </div>
 
                 {/* Nav Buttons */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 md:gap-3 shrink-0">
                     <Link to="/upload">
-                        <Button className="bg-black hover:bg-gray-800 text-white shadow-lg rounded-full px-6 transition-all hover:scale-105">
-                            <Upload className="w-4 h-4 mr-2" />
+                        <Button className="bg-black/90 hover:bg-black text-white shadow-lg rounded-full px-3 md:px-6 py-2 transition-all hover:scale-105 backdrop-blur-sm h-auto text-[11px] md:text-sm">
+                            <Upload className="w-3 h-3 md:w-4 md:h-4 mr-1 md:mr-2" />
                             Upload notes
                         </Button>
                     </Link>
 
                     {/* Profile / Auth */}
                     {user ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center">
                             <Link to="/profile">
-                                <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden border border-gray-200 shadow-sm hover:ring-2 hover:ring-blue-100 transition-all">
+                                <div className="w-8 h-8 md:w-10 md:h-10 rounded-full bg-white/50 overflow-hidden border border-white/80 shadow-sm hover:ring-2 hover:ring-blue-400 transition-all backdrop-blur-md">
                                     {/* Placeholder Avatar */}
                                     <img src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${user.email}&gender=male`} alt="User" className="w-full h-full object-cover" />
                                 </div>
@@ -145,13 +145,13 @@ export default function LandingPage() {
                         </div>
                     ) : (
                         <Link to="/auth">
-                            <Button variant="ghost" size="sm" className="font-medium text-gray-600 hover:text-gray-900">Sign In</Button>
+                            <Button variant="ghost" className="font-medium text-gray-800 hover:text-black hover:bg-white/50 rounded-full px-3 transition-colors h-auto py-2 text-[11px] md:text-sm">Sign In</Button>
                         </Link>
                     )}
                 </div>
             </header>
 
-            <main className="flex-1 container px-4 md:px-6 py-12 mx-auto max-w-7xl relative z-10">
+            <main className="flex-1 container px-4 md:px-6 py-12 pb-32 md:pb-40 mx-auto max-w-7xl relative z-10">
 
                 {/* HERO SECTION */}
                 <div className="mb-16 md:mb-24 max-w-4xl mx-auto text-left md:text-left mt-8">
