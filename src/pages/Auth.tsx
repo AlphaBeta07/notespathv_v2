@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
-import { Loader2, ArrowLeft, Mail, Lock, ShieldCheck, UserPlus, LogIn, AlertCircle } from 'lucide-react'
+import { Loader2, ArrowLeft, Mail, Lock, ShieldCheck, UserPlus, LogIn, AlertCircle, CheckCircle } from 'lucide-react'
 import { DotBackground } from '../components/DotBackground'
 import { motion } from 'framer-motion'
 
@@ -12,16 +12,28 @@ export default function AuthPage() {
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [isLogin, setIsLogin] = useState(true)
+    const [isResetPassword, setIsResetPassword] = useState(false)
     const [error, setError] = useState<string | null>(null)
+    const [successMsg, setSuccessMsg] = useState<string | null>(null)
     const navigate = useNavigate()
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault()
         setLoading(true)
         setError(null)
+        setSuccessMsg(null)
 
         try {
-            if (isLogin) {
+            if (isResetPassword) {
+                if (!email) {
+                    throw new Error("Please enter your email to reset password.")
+                }
+                const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/update-password`,
+                })
+                if (error) throw error
+                setSuccessMsg("Password reset link sent! Check your email.")
+            } else if (isLogin) {
                 const { error } = await supabase.auth.signInWithPassword({
                     email,
                     password,
@@ -72,13 +84,13 @@ export default function AuthPage() {
 
                         <div className="text-center mb-8">
                             <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-blue-600/20 transform rotate-3">
-                                {isLogin ? <LogIn className="w-6 h-6 text-white" /> : <UserPlus className="w-6 h-6 text-white" />}
+                                {isResetPassword ? <Mail className="w-6 h-6 text-white" /> : (isLogin ? <LogIn className="w-6 h-6 text-white" /> : <UserPlus className="w-6 h-6 text-white" />)}
                             </div>
                             <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-                                {isLogin ? 'Welcome back' : 'Create an account'}
+                                {isResetPassword ? 'Reset Password' : (isLogin ? 'Welcome back' : 'Create an account')}
                             </h2>
                             <p className="text-sm text-gray-500 mt-2">
-                                {isLogin ? 'Enter your credentials to access your account' : 'Enter your details to get started'}
+                                {isResetPassword ? 'Enter your email to receive a reset link' : (isLogin ? 'Enter your credentials to access your account' : 'Enter your details to get started')}
                             </p>
                         </div>
 
@@ -97,25 +109,45 @@ export default function AuthPage() {
                                     />
                                 </div>
                             </div>
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">Password</label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
-                                    <Input
-                                        type="password"
-                                        placeholder="••••••••"
-                                        required
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
-                                        className="pl-10 bg-white/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 h-11 rounded-xl transition-all"
-                                    />
+                            {!isResetPassword && (
+                                <div className="space-y-2">
+                                    <div className="flex justify-between items-center ml-1">
+                                        <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Password</label>
+                                        {isLogin && (
+                                            <button 
+                                                type="button"
+                                                onClick={() => { setIsResetPassword(true); setError(null); setSuccessMsg(null); }}
+                                                className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition-colors"
+                                            >
+                                                Forgot password?
+                                            </button>
+                                        )}
+                                    </div>
+                                    <div className="relative">
+                                        <Lock className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+                                        <Input
+                                            type="password"
+                                            placeholder="••••••••"
+                                            required={!isResetPassword}
+                                            value={password}
+                                            onChange={(e) => setPassword(e.target.value)}
+                                            className="pl-10 bg-white/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 h-11 rounded-xl transition-all"
+                                        />
+                                    </div>
                                 </div>
-                            </div>
+                            )}
 
                             {error && (
                                 <div className="p-3 rounded-lg bg-red-50 border border-red-100 flex items-start gap-2 text-red-600 text-sm animate-in fade-in slide-in-from-top-2">
                                     <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
                                     <span className="leading-snug">{error}</span>
+                                </div>
+                            )}
+
+                            {successMsg && (
+                                <div className="p-3 rounded-lg bg-green-50 border border-green-100 flex items-start gap-2 text-green-700 text-sm animate-in fade-in slide-in-from-top-2">
+                                    <CheckCircle className="w-4 h-4 mt-0.5 shrink-0" />
+                                    <span className="leading-snug">{successMsg}</span>
                                 </div>
                             )}
 
@@ -125,20 +157,34 @@ export default function AuthPage() {
                                 disabled={loading}
                             >
                                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                {isLogin ? 'Sign In' : 'Sign Up'}
+                                {isResetPassword ? 'Send Reset Link' : (isLogin ? 'Sign In' : 'Sign Up')}
                             </Button>
                         </form>
 
                         <div className="mt-6 pt-6 border-t border-gray-200/50 text-center">
-                            <p className="text-sm text-gray-500">
-                                {isLogin ? "Don't have an account? " : "Already have an account? "}
-                                <button
-                                    onClick={() => setIsLogin(!isLogin)}
-                                    className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors focus:outline-none"
-                                >
-                                    {isLogin ? "Sign Up" : "Login"}
-                                </button>
-                            </p>
+                            {isResetPassword ? (
+                                <p className="text-sm text-gray-500">
+                                    Remember your password?{' '}
+                                    <button
+                                        type="button"
+                                        onClick={() => { setIsResetPassword(false); setIsLogin(true); setError(null); setSuccessMsg(null); }}
+                                        className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors focus:outline-none"
+                                    >
+                                        Back to Login
+                                    </button>
+                                </p>
+                            ) : (
+                                <p className="text-sm text-gray-500">
+                                    {isLogin ? "Don't have an account? " : "Already have an account? "}
+                                    <button
+                                        type="button"
+                                        onClick={() => { setIsLogin(!isLogin); setError(null); setSuccessMsg(null); }}
+                                        className="font-semibold text-blue-600 hover:text-blue-700 hover:underline transition-colors focus:outline-none"
+                                    >
+                                        {isLogin ? "Sign Up" : "Login"}
+                                    </button>
+                                </p>
+                            )}
                         </div>
 
                         <div className="mt-6 flex justify-center text-xs text-gray-400 gap-4">

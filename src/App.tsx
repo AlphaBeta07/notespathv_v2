@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import ProtectedLayout from './components/ProtectedLayout'
 import LandingPage from './pages/Landing'
 import AuthPage from './pages/Auth'
+import UpdatePasswordPage from './pages/UpdatePassword'
 
 import Dashboard from './pages/Dashboard'
 import Upload from './pages/Upload'
@@ -23,6 +24,7 @@ function App() {
                 <Routes>
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/auth" element={<AuthPage />} />
+                    <Route path="/update-password" element={<UpdatePasswordPage />} />
 
                     <Route element={<ProtectedLayout />}>
                         <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />

@@ -188,10 +188,16 @@ export default function LandingPage() {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                     >
-                        <div className="mb-4">
-                            <span className="font-bold text-lg md:text-2xl tracking-tight text-gray-900 drop-shadow-sm bg-white/50 px-4 py-1.5 rounded-full border border-gray-200/50 inline-block">
-                                Notes<span className="text-blue-600">Pathv</span>
+                        <div className="mb-4 flex items-center justify-start md:justify-start gap-4 flex-wrap">
+                            <span className="font-bold text-lg md:text-2xl tracking-tight text-gray-900 drop-shadow-sm bg-white/50 px-4 py-1.5 rounded-full border border-gray-200/50 inline-flex items-center">
+                                Notes<span className="text-blue-600 ml-1">Pathv</span>
                             </span>
+                            {/* <Link to="/ainotes">
+                                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-full shadow-lg shadow-blue-500/20 px-4 py-1.5 md:py-2 flex items-center gap-2 font-medium transition-all transform hover:scale-105 active:scale-95 border border-blue-400">
+                                    <span className="text-lg">✨</span>
+                                    <span>AI Notes Bot</span>
+                                </Button>
+                            </Link> */}
                         </div>
                         <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 leading-[1.1] mb-6">
                             A smart repository <br />
