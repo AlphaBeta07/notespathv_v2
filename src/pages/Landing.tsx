@@ -357,8 +357,8 @@ export default function LandingPage() {
                         </div>
                         <p>© 2026 NotesPathv. All rights reserved.</p>
                         <p className="flex items-center gap-1">
-                            <span>Made with</span>
-                            <span className="text-rose-500">❤️</span>
+                            <span>Developed</span>
+                            {/* <span className="text-rose-500"></span> */}
                             <span>by</span>
                             <a href="https://anishlandage.fun" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-black transition-colors font-medium">
                                 Anish Landage

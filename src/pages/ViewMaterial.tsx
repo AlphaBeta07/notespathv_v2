@@ -132,12 +132,14 @@ export default function ViewMaterial() {
                         )}
 
                         {!isImage && !isPDF && (
-                            <div className="text-white text-center">
-                                <p className="mb-4">Preview not available for this file type.</p>
-                                <Button asChild variant="secondary">
-                                    <a href={material.file_url} target="_blank" rel="noopener noreferrer">Download to View</a>
-                                </Button>
-                            </div>
+                            <iframe
+                                src={material.file_url.match(/\.(doc|docx|ppt|pptx|xls|xlsx)$/i) 
+                                    ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(material.file_url)}` 
+                                    : `https://docs.google.com/gview?url=${encodeURIComponent(material.file_url)}&embedded=true`}
+                                className="w-full h-full bg-white rounded-lg shadow-inner"
+                                frameBorder="0"
+                                title={material.title}
+                            />
                         )}
                     </div>
                 </div>

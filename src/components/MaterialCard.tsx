@@ -95,10 +95,13 @@ export function MaterialCard({ material, onDelete }: MaterialCardProps) {
                                         <p><span className="text-gray-500">Subject:</span> {material.subject}</p>
                                     )}
                                     {material.module && (
-                                        <p><span className="text-gray-500">@Module:</span> {material.module.replace('Module ', '')}</p>
+                                        <p><span className="text-gray-500">Unit:</span> {material.module.replace('Unit ', '')}</p>
                                     )}
                                     {material.semester && (
                                         <p><span className="text-gray-500">Semester:</span> {material.semester.replace('Semester ', '')}</p>
+                                    )}
+                                    {material.branch && (
+                                        <p><span className="text-gray-500">Branch:</span> {material.branch}</p>
                                     )}
                                     {material.college_details && (
                                         <p className="line-clamp-1"><span className="text-gray-500">Details:</span> {material.college_details}</p>
@@ -169,14 +172,19 @@ export function MaterialCard({ material, onDelete }: MaterialCardProps) {
                                     </div>
                                 ) : (
                                     <>
-                                        <div className="absolute inset-0 bg-white p-2 flex flex-col gap-2 opacity-50">
-                                            <div className="h-2 w-full bg-gray-200 rounded-sm" />
-                                            <div className="h-2 w-3/4 bg-gray-200 rounded-sm" />
-                                            <div className="h-2 w-full bg-gray-200 rounded-sm" />
-                                            <div className="h-2 w-5/6 bg-gray-200 rounded-sm" />
-                                            <div className="h-2 w-full bg-gray-200 rounded-sm" />
+                                        <div className="absolute inset-0 overflow-hidden pointer-events-none bg-white flex justify-center">
+                                            <iframe
+                                                src={material.file_url.match(/\.(doc|docx|ppt|pptx|xls|xlsx)$/i)
+                                                    ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(material.file_url)}`
+                                                    : `https://docs.google.com/gview?url=${encodeURIComponent(material.file_url)}&embedded=true`}
+                                                className="w-[800px] h-[1066px] origin-top-left scale-[0.15] border-0"
+                                                loading="lazy"
+                                                title="File Preview"
+                                                tabIndex={-1}
+                                                scrolling="no"
+                                            />
                                         </div>
-                                        <FileText className="w-8 h-8 text-gray-400 z-10" />
+                                        <div className="absolute inset-0 z-10 hover:bg-black/5 transition-colors duration-300" />
                                     </>
                                 )}
 

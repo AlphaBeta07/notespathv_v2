@@ -93,10 +93,33 @@ export default function Upload() {
         fetchSubjects()
     }, [branch])
 
+    const ALLOWED_TYPES = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'image/jpeg',
+        'image/png',
+        'image/gif',
+        'image/webp',
+        'image/svg+xml',
+    ]
+    const ALLOWED_EXTENSIONS = /\.(pdf|doc|docx|jpg|jpeg|png|gif|webp|svg)$/i
+
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (e.target.files && e.target.files[0]) {
-            setFile(e.target.files[0])
+        const selected = e.target.files?.[0]
+        if (!selected) return
+
+        const validType = ALLOWED_TYPES.includes(selected.type)
+        const validExt = ALLOWED_EXTENSIONS.test(selected.name)
+
+        if (!validType && !validExt) {
+            setError('Only PDF, DOC, DOCX, JPG, PNG are allowed.')
+            e.target.value = ''
+            return
         }
+
+        setError(null)
+        setFile(selected)
     }
 
     const handleUpload = async (e: React.FormEvent) => {
@@ -195,6 +218,7 @@ export default function Upload() {
                         <div className={`mb-8 border-2 border-dashed rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-all relative group ${file ? 'border-green-500/50 bg-green-50/50' : 'border-gray-300 hover:border-blue-500/50 hover:bg-white/60'}`}>
                             <input
                                 type="file"
+                                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.webp,.svg,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,image/*"
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                                 onChange={handleFileChange}
                                 required={!file}
@@ -224,7 +248,7 @@ export default function Upload() {
                                         <UploadCloud className="w-8 h-8 text-blue-500" />
                                     </div>
                                     <h3 className="text-lg font-semibold text-gray-900">Click to upload or drag and drop</h3>
-                                    <p className="text-sm text-gray-500 mt-1">PDF, DOC, Images (Max 10MB)</p>
+                                    <p className="text-sm text-gray-500 mt-1">PDF, DOC, DOCX, or Images only (Max 10MB)</p>
                                 </>
                             )}
                         </div>
@@ -321,7 +345,7 @@ export default function Upload() {
                             <div className="space-y-1">
                                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider ml-1">College Details</label>
                                 <Input
-                                    placeholder="e.g. IIT Bombay, Prof. Sharma"
+                                    placeholder="College Name"
                                     value={college}
                                     onChange={(e) => setCollege(e.target.value)}
                                     className="bg-white/50 border-gray-200 focus:bg-white focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 h-12 rounded-xl"
