@@ -1,6 +1,6 @@
 # Material Replica
 
-A functional UI/UX replica of [getmaterial.vercel.app](https://getmaterial.vercel.app) built with React, Vite, Tailwind CSS, shadcn/ui, and Supabase.
+A functional UI/UX built with React, Vite, Tailwind CSS, shadcn/ui, and Supabase.
 
 ## Tech Stack
 - **Framework**: React + Vite
