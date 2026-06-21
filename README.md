@@ -1,10 +1,6 @@
 # 📚 NotesPathv
 
-<<<<<<< HEAD
-A functional UI/UX built with React, Vite, Tailwind CSS, shadcn/ui, and Supabase.
-=======
-> A smart repository for engineering notes. Share, discover, and learn with peers from college.
->>>>>>> 0976d1d (updated)
+> A functional UI/UX built with React, Vite, Tailwind CSS, shadcn/ui, and Supabase. A smart repository for engineering notes. Share, discover, and learn with peers from college.
 
 **NotesPathv** is a full-stack web application that allows engineering students to upload, search, and view study materials (PDFs, DOCs, images). It features authenticated uploads, a rich filtering system, in-browser PDF preview, and WhatsApp sharing.
 
