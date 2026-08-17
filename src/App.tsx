@@ -9,6 +9,9 @@ import Dashboard from './pages/Dashboard'
 import Upload from './pages/Upload'
 import Profile from './pages/Profile'
 import ViewMaterial from './pages/ViewMaterial'
+import OfflineBanner from './components/OfflineBanner'
+import InstallPrompt from './components/InstallPrompt'
+import PWAReloadPrompt from './components/PWAReloadPrompt'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
     const { session, loading } = useAuth()
@@ -21,6 +24,7 @@ function App() {
     return (
         <Router>
             <AuthProvider>
+                <OfflineBanner />
                 <Routes>
                     <Route path="/" element={<LandingPage />} />
                     <Route path="/auth" element={<AuthPage />} />
@@ -36,6 +40,8 @@ function App() {
 
                     <Route path="*" element={<Navigate to="/" />} />
                 </Routes>
+                <InstallPrompt />
+                <PWAReloadPrompt />
             </AuthProvider>
         </Router>
     )
