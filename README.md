@@ -12,6 +12,7 @@
 - **In-Browser Document Preview:** Read PDFs and Office files directly in your browser without downloading.
 - **User Dashboard:** Manage and organize your uploaded materials.
 - **WhatsApp Sharing:** One-click sharing of study materials with peers.
+- **Progressive Web App (PWA):** Installable on mobile and desktop, featuring offline support and a native app-like experience.
 - **Responsive Design:** Beautiful, dynamic UI built with TailwindCSS, Framer Motion, and Radix UI components.
 
 ## 🛠️ Tech Stack
@@ -23,6 +24,7 @@
 - **Routing:** React Router DOM v7
 - **Backend & Database:** Supabase (PostgreSQL Database, Auth, Storage Bucket)
 - **Document Rendering:** react-pdf, html2pdf.js
+- **PWA Tooling:** vite-plugin-pwa, Workbox
 
 ## 🗂️ Project Structure
 
