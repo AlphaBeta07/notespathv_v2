@@ -22,7 +22,7 @@ export function DotBackground() {
         resize()
 
         // Configuration
-        const spacing = 25 // Space between dots
+        const spacing = 16 // Space between dots (decreased for more dots)
         const dotBaseSize = 1.2
         // const waveHeight = 100 // Amplitude of the z-axis wave (visualized as size/opacity or offset)
 

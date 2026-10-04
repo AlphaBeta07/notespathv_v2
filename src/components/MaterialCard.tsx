@@ -1,9 +1,9 @@
 import { Material } from '../types'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 // import { Card } from './ui/card' // Using base Card, but will customize content significantly
 import { Button } from './ui/button'
 import { FileText, Bookmark, Share2, Trash2, Loader2, X, Copy, Check } from 'lucide-react' // Using Share2 for WhatsApp placeholder
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
@@ -22,7 +22,9 @@ interface MaterialCardProps {
 
 export function MaterialCard({ material, onDelete }: MaterialCardProps) {
     const { user } = useAuth()
+    const navigate = useNavigate()
     const [isDeleting, setIsDeleting] = useState(false)
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
     const [pdfError, setPdfError] = useState(false)
     const [isShareOpen, setIsShareOpen] = useState(false)
     const [copied, setCopied] = useState(false)
@@ -34,10 +36,13 @@ export function MaterialCard({ material, onDelete }: MaterialCardProps) {
     // Check if file is Image
     const isImage = material.file_url.match(/\.(jpeg|jpg|gif|png)$/i) != null
 
-    const handleDelete = async () => {
-        if (!confirm('Are you sure you want to delete this material?')) return
+    const handleDelete = () => {
+        setShowDeleteConfirm(true)
+    }
 
+    const confirmDelete = async () => {
         setIsDeleting(true)
+        setShowDeleteConfirm(false)
         try {
             const urlObj = new URL(material.file_url)
             const pathSegments = urlObj.pathname.split('/')
@@ -72,6 +77,14 @@ export function MaterialCard({ material, onDelete }: MaterialCardProps) {
         setTimeout(() => setCopied(false), 2000)
     }
 
+    const handleCardClick = (e: React.MouseEvent) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('button') || target.closest('a') || target.closest('svg')) {
+            return;
+        }
+        navigate(`/material/${material.id}`);
+    }
+
     // Formatting Date
     const dateStr = new Date(material.created_at).toLocaleDateString('en-GB') // DD/MM/YYYY format commonly used in India/UK
 
@@ -81,7 +94,7 @@ export function MaterialCard({ material, onDelete }: MaterialCardProps) {
                 whileHover={{ y: -5 }}
                 transition={{ type: 'spring', stiffness: 300 }}
             >
-                <div className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 overflow-hidden flex flex-col h-full">
+                <div onClick={handleCardClick} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow border border-gray-100 overflow-hidden flex flex-col h-full cursor-pointer">
                     <div className="flex flex-row p-4 gap-4 h-full">
                         {/* LEFT COLUMN: Details */}
                         <div className="flex-1 flex flex-col justify-between space-y-3">
@@ -259,6 +272,54 @@ export function MaterialCard({ material, onDelete }: MaterialCardProps) {
                     </div>
                 )
             }
+
+            {/* Delete Confirmation Modal */}
+            <AnimatePresence>
+                {showDeleteConfirm && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                            className="bg-white rounded-xl shadow-2xl w-full max-w-sm p-5 relative overflow-hidden"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="absolute top-0 left-0 w-full h-1 bg-red-500" />
+                            <div className="flex flex-col items-center text-center">
+                                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mb-3">
+                                    <Trash2 className="w-5 h-5 text-red-600" />
+                                </div>
+                                <h3 className="text-lg font-bold text-gray-900 mb-1.5">Delete Material?</h3>
+                                <p className="text-sm text-gray-500 mb-5 leading-relaxed">
+                                    Are you sure you want to delete <span className="font-semibold text-gray-700">"{material.title || material.subject}"</span>? This action cannot be undone.
+                                </p>
+
+                                <div className="flex items-center gap-3 w-full">
+                                    <Button
+                                        onClick={() => setShowDeleteConfirm(false)}
+                                        variant="outline"
+                                        className="flex-1 bg-white text-gray-700 border-gray-200 hover:bg-gray-50"
+                                        disabled={isDeleting}
+                                    >
+                                        Cancel
+                                    </Button>
+                                    <Button
+                                        onClick={confirmDelete}
+                                        className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                                        disabled={isDeleting}
+                                    >
+                                        {isDeleting ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+                                        {isDeleting ? "Deleting..." : "Delete"}
+                                    </Button>
+                                </div>
+                            </div>
+                        </motion.div>
+                        {/* Backdrop click to close */}
+                        <div className="absolute inset-0 -z-10" onClick={() => setShowDeleteConfirm(false)} />
+                    </div>
+                )}
+            </AnimatePresence>
         </>
     )
 }
