@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard'
 import Upload from './pages/Upload'
 import Profile from './pages/Profile'
 import ViewMaterial from './pages/ViewMaterial'
+import Terms from './pages/Terms'
 import OfflineBanner from './components/OfflineBanner'
 import InstallPrompt from './components/InstallPrompt'
 import PWAReloadPrompt from './components/PWAReloadPrompt'
@@ -37,6 +38,7 @@ function App() {
                     </Route>
 
                     <Route path="/material/:id" element={<ViewMaterial />} />
+                    <Route path="/terms" element={<Terms />} />
 
                     <Route path="*" element={<Navigate to="/" />} />
                 </Routes>

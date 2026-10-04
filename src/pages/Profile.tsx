@@ -96,6 +96,9 @@ export default function Profile() {
                             Anish Landage
                         </a>
                     </p>
+                    <div className="flex items-center gap-4 text-sm text-gray-500 mt-4 md:mt-0">
+                        <Link to="/terms" className="hover:text-blue-600 transition-colors font-medium">Terms & Conditions</Link>
+                    </div>
                 </div>
             </div>
         </footer>
