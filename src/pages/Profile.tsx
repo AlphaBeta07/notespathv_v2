@@ -78,6 +78,27 @@ export default function Profile() {
                     </div>
                 </motion.div>
             </main>
+        <footer className="py-12 relative z-10 border-t border-gray-100 bg-white/40 backdrop-blur-sm mt-auto">
+            <div className="container mx-auto px-4 md:px-6">
+                <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
+                    <div>
+                        <span className="font-bold text-xl tracking-tight text-gray-900">
+                            Notes<span className="text-blue-600">Pathv</span>
+                        </span>
+                        <p className="text-sm text-gray-500 mt-2 max-w-xs mx-auto md:mx-0">
+                            Empowering students to share knowledge and ace their exams together.
+                        </p>
+                    </div>
+                    <p className="text-gray-600">© 2026 NotesPathv. All rights reserved.</p>
+                    <p className="flex items-center gap-1 text-gray-600">
+                        <span>Developed by</span>
+                        <a href="https://anishlandage.fun" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:text-blue-800 transition-colors font-medium">
+                            Anish Landage
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </footer>
         </div>
     )
 }

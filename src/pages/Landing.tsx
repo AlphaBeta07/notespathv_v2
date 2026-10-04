@@ -277,40 +277,7 @@ export default function LandingPage() {
             </main>
 
             {/* Footer */}
-            <footer className="py-12 relative z-10 border-t border-gray-100 bg-white/40 backdrop-blur-sm mt-12">
-                <div className="container mx-auto px-4 md:px-6">
-                    <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-                        <div className="text-center md:text-left">
-                            <span className="font-bold text-xl tracking-tight text-gray-900">
-                                Notes<span className="text-blue-600">Pathv</span>
-                            </span>
-                            <p className="text-sm text-gray-500 mt-2 max-w-xs">
-                                Empowering students to share knowledge and ace their exams together.
-                            </p>
-                        </div>
-                        <p>© 2026 NotesPathv. All rights reserved.</p>
-                        <p className="flex items-center gap-1">
-                            <span>Developed</span>
-                            {/* <span className="text-rose-500"></span> */}
-                            <span>by</span>
-                            <a href="https://anishlandage.fun" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-black transition-colors font-medium">
-                                Anish Landage
-                            </a>
-                        </p>
 
-                        {/* <div className="flex items-center gap-6 text-sm text-gray-500 font-medium">
-                            <a href="#" className="hover:text-blue-600 transition-colors">About</a>
-                            <a href="#" className="hover:text-blue-600 transition-colors">Contact</a>
-                            <a href="#" className="hover:text-blue-600 transition-colors">Privacy</a>
-                            <a href="#" className="hover:text-blue-600 transition-colors">Terms</a>
-                        </div> */}
-                    </div>
-
-                    <div className="mt-8 pt-8 border-t border-gray-200/50 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-gray-400">
-
-                    </div>
-                </div>
-            </footer>
         </div>
     )
 }
