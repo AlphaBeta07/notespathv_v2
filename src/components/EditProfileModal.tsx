@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, UploadCloud, Loader2, Camera } from 'lucide-react'
+import { X, Loader2, Camera } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { User } from '@supabase/supabase-js'
 import { Button } from './ui/button'

@@ -22,12 +22,14 @@
 ## ✨ Key Features
 
 - 🔐 **Secure Authentication:** Robust user authentication (Email/Password & Magic Links) powered by Supabase Auth and secured with Row Level Security (RLS).
+- 👤 **Customizable User Profiles:** Fully functional "Edit Profile" system leveraging Supabase `user_metadata` for secure, real-time username and avatar updates.
 - 📱 **Progressive Web App (PWA):** Fully installable on iOS, Android, and Desktop environments. Features an offline-ready application shell, intelligent caching via Workbox, and native-like app capabilities.
 - 🔍 **Advanced Client-Side Search:** A highly optimized search and filtering engine (branch, module, semester) that runs entirely on the client for zero-latency discovery.
 - 📄 **In-Browser Document Rendering:** Seamlessly view PDFs, DOCX files, and high-resolution images directly in the browser via `react-pdf` and integrated viewers.
 - 📤 **Rich Uploads & Metadata:** Associate uploaded materials with detailed academic metadata to ensure accurate categorization and discoverability.
 - 💬 **Social Integration:** One-click WhatsApp sharing capabilities to quickly distribute resources among peers.
-- 🎨 **Modern, Accessible UI:** A responsive, glassmorphic design system utilizing **Tailwind CSS**, **Framer Motion** for fluid animations, and accessible **Radix UI** primitives.
+- 🎨 **Apple "Liquid Glass" UI:** A responsive, ultra-premium glassmorphic design system utilizing **Tailwind CSS**, **Framer Motion** for fluid animations, and accessible **Radix UI** primitives.
+- 📜 **Legal Pages:** Built-in dynamic Terms and Conditions layout for transparent platform guidelines.
 
 ---
 
