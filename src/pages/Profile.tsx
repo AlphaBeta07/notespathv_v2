@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { Button } from '../components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '../components/ui/avatar'
@@ -5,11 +6,18 @@ import { DotBackground } from '../components/DotBackground'
 import { Link } from 'react-router-dom'
 import { ArrowLeft, LogOut, User } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { EditProfileModal } from '../components/EditProfileModal'
 
 export default function Profile() {
     const { user, signOut } = useAuth()
 
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+
     if (!user) return null
+
+    const username = user.user_metadata?.username || user.email?.split('@')[0] || ''
+    const avatarUrl = user.user_metadata?.avatar_url || `https://api.dicebear.com/7.x/pixel-art/svg?seed=${user.email}&gender=male`
+    const memberSinceYear = user.created_at ? new Date(user.created_at).getFullYear() : new Date().getFullYear()
 
     return (
         <div className="min-h-screen flex flex-col relative overflow-hidden font-sans">
@@ -34,14 +42,14 @@ export default function Profile() {
 
                         <div className="w-24 h-24 rounded-full bg-white p-1 shadow-lg ring-1 ring-gray-100 mb-6 relative group transform transition-transform hover:scale-105">
                             <Avatar className="w-full h-full">
-                                <AvatarImage src={`https://api.dicebear.com/7.x/pixel-art/svg?seed=${user.email}&gender=male`} />
+                                <AvatarImage src={avatarUrl} className="object-cover" />
                                 <AvatarFallback className="text-2xl bg-blue-50 text-blue-600 font-bold">
-                                    {user.email?.charAt(0).toUpperCase()}
+                                    {username.charAt(0).toUpperCase()}
                                 </AvatarFallback>
                             </Avatar>
                         </div>
 
-                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight mb-1">{user.email?.split('@')[0]}</h2>
+                        <h2 className="text-2xl font-bold text-gray-900 tracking-tight mb-1">{username}</h2>
                         <div className="inline-flex items-center px-3 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-700 text-xs font-medium mb-8">
                             <span className="w-2 h-2 rounded-full bg-blue-500 mr-2 animate-pulse"></span>
                             {user.email}
@@ -50,13 +58,13 @@ export default function Profile() {
                         <div className="w-full space-y-3">
                             <Button
                                 variant="outline"
+                                onClick={() => setIsEditModalOpen(true)}
                                 className="w-full h-12 rounded-xl bg-white/50 hover:bg-white border-gray-200 text-gray-700 hover:text-black justify-start px-4 transition-all hover:shadow-sm group"
                             >
                                 <div className="p-1.5 rounded-lg bg-gray-100 group-hover:bg-gray-200 mr-3 transition-colors">
                                     <User className="w-4 h-4 text-gray-500 group-hover:text-gray-700" />
                                 </div>
                                 <span className="font-medium">Edit Profile</span>
-                                <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">Coming Soon</span>
                             </Button>
 
                             <Button
@@ -72,12 +80,18 @@ export default function Profile() {
                         </div>
 
                         <div className="mt-8 pt-6 border-t border-gray-200/50 w-full text-center">
-                            <p className="text-xs text-gray-400 font-medium">Member since {new Date().getFullYear()}</p>
+                            <p className="text-xs text-gray-400 font-medium">Member since {memberSinceYear}</p>
                         </div>
 
                     </div>
                 </motion.div>
             </main>
+
+            <EditProfileModal 
+                isOpen={isEditModalOpen} 
+                onClose={() => setIsEditModalOpen(false)} 
+                user={user} 
+            />
         <footer className="py-12 relative z-10 border-t border-gray-100 bg-white/40 backdrop-blur-sm mt-auto">
             <div className="container mx-auto px-4 md:px-6">
                 <div className="flex flex-col md:flex-row justify-between items-center gap-6 text-center md:text-left">
