@@ -13,11 +13,20 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Allowed Origins for CORS and CSRF protection
+const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL] 
+    : ['http://localhost:5173'];
+
 // Security Middleware
 app.use(cors({
-    origin: process.env.NODE_ENV === 'production' 
-        ? process.env.FRONTEND_URL 
-        : 'http://localhost:5173',
+    origin: function(origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
     credentials: true,
 }));
 app.use(express.json());
@@ -29,7 +38,7 @@ app.use(helmet());
 // Disable X-Powered-By
 app.disable('x-powered-by');
 
-// Add Custom Security Headers (Helmet handles most, but setting specifically as requested)
+// Add Custom Security Headers
 app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
@@ -37,44 +46,73 @@ app.use((req, res, next) => {
     next();
 });
 
+// CSRF Protection Middleware
+app.use((req, res, next) => {
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
+        const origin = req.headers.origin;
+        // If origin is present, it must be in the allowed list
+        if (origin && !allowedOrigins.includes(origin)) {
+            return res.status(403).json({ error: 'CSRF validation failed: Invalid Origin' });
+        }
+        // If origin is missing, but it's a production browser request, we might block it.
+        // However, we rely on SameSite: lax cookies for primary defense when origin is omitted by older browsers.
+    }
+    next();
+});
+
 // Rate limiting configurations
 const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
+    windowMs: 15 * 60 * 1000,
     max: 200, 
-    message: { error: 'Too many requests from this IP, please try again after 15 minutes' },
+    message: { error: 'Too many requests from this IP' },
     standardHeaders: true, 
     legacyHeaders: false, 
 });
 
 const authLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
+    windowMs: 60 * 60 * 1000,
     max: 20, 
-    message: { error: 'Too many authentication attempts from this IP, please try again after an hour' },
+    message: { error: 'Too many authentication attempts' },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
 const uploadLimiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 1 hour
+    windowMs: 60 * 60 * 1000,
     max: 30, 
-    message: { error: 'Too many uploads from this IP, please try again after an hour' },
+    message: { error: 'Too many uploads' },
     standardHeaders: true,
     legacyHeaders: false,
 });
 
-// Apply general rate limit to all requests
 app.use('/api', generalLimiter);
 
 const upload = multer({ 
     storage: multer.memoryStorage(),
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
+    limits: { fileSize: 10 * 1024 * 1024 }
 });
 
-// Admin supabase client (Service Role) for privileged operations ONLY
-// Never expose this to the frontend!
+const ALLOWED_MIME_TYPES = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    'image/svg+xml'
+];
+
+// Admin supabase client (Service Role) ONLY for auth operations requiring it
 const supabaseAdmin = createClient(
     process.env.VITE_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY 
+);
+
+// Anon client for public requests so RLS is respected
+const supabaseAnon = createClient(
+    process.env.VITE_SUPABASE_URL,
+    process.env.VITE_SUPABASE_ANON_KEY
 );
 
 // Helper to get authenticated supabase client for a request
@@ -112,26 +150,26 @@ const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+    maxAge: 7 * 24 * 60 * 60 * 1000
 };
 
 // --- AUTH ROUTES ---
 
-// Use authLimiter for all auth routes
 app.use('/api/auth', authLimiter);
 
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
     try {
         const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) return res.status(401).json({ error: 'Invalid credentials' });
 
         res.cookie('access_token', data.session.access_token, cookieOptions);
         res.cookie('refresh_token', data.session.refresh_token, cookieOptions);
         
         res.json({ user: data.user });
     } catch (error) {
-        res.status(401).json({ error: error.message });
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -139,7 +177,7 @@ app.post('/api/auth/signup', async (req, res) => {
     const { email, password } = req.body;
     try {
         const { data, error } = await supabaseAdmin.auth.signUp({ email, password });
-        if (error) throw error;
+        if (error) return res.status(400).json({ error: 'Failed to sign up' });
         
         if (data.session) {
             res.cookie('access_token', data.session.access_token, cookieOptions);
@@ -147,11 +185,20 @@ app.post('/api/auth/signup', async (req, res) => {
         }
         res.json({ user: data.user });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
-app.post('/api/auth/logout', (req, res) => {
+app.post('/api/auth/logout', async (req, res) => {
+    try {
+        const supabase = getAuthClient(req);
+        if (supabase) {
+            await supabase.auth.signOut();
+        }
+    } catch (error) {
+        console.error('Logout error:', error);
+    }
     res.clearCookie('access_token', cookieOptions);
     res.clearCookie('refresh_token', cookieOptions);
     res.json({ success: true });
@@ -175,13 +222,18 @@ app.get('/api/auth/session', async (req, res) => {
 app.post('/api/auth/reset-password', async (req, res) => {
     const { email } = req.body;
     try {
+        const frontendUrl = process.env.NODE_ENV === 'production' 
+            ? process.env.FRONTEND_URL 
+            : 'http://localhost:5173';
+        
         const { error } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
-            redirectTo: `${req.headers.origin}/update-password`,
+            redirectTo: `${frontendUrl}/update-password`,
         });
-        if (error) throw error;
+        if (error) return res.status(400).json({ error: 'Failed to reset password' });
         res.json({ success: true });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -189,10 +241,11 @@ app.post('/api/auth/update-password', requireAuth, async (req, res) => {
     const { password } = req.body;
     try {
         const { error } = await req.supabase.auth.updateUser({ password });
-        if (error) throw error;
+        if (error) return res.status(400).json({ error: 'Failed to update password' });
         res.json({ success: true });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -203,14 +256,21 @@ app.post('/api/auth/update-profile', requireAuth, upload.single('file'), async (
         let newAvatarUrl = req.user.user_metadata?.avatar_url;
 
         if (file) {
-            const fileExt = path.extname(file.originalname);
+            if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+                return res.status(400).json({ error: 'Invalid file type' });
+            }
+
+            const fileExt = path.extname(file.originalname).replace(/[^a-zA-Z0-9.]/g, '');
             const fileName = `avatars/${req.user.id}-${Date.now()}${fileExt}`;
 
             const { error: uploadError } = await req.supabase.storage
                 .from('materials')
                 .upload(fileName, file.buffer, { contentType: file.mimetype });
 
-            if (uploadError) throw uploadError;
+            if (uploadError) {
+                console.error(uploadError);
+                return res.status(500).json({ error: 'Upload failed' });
+            }
 
             const { data: { publicUrl } } = req.supabase.storage
                 .from('materials')
@@ -226,26 +286,40 @@ app.post('/api/auth/update-profile', requireAuth, upload.single('file'), async (
             }
         });
 
-        if (updateError) throw updateError;
+        if (updateError) {
+            console.error(updateError);
+            return res.status(400).json({ error: 'Profile update failed' });
+        }
         res.json({ user: data.user });
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
 // --- API ROUTES ---
 
+// Helper to resolve client for public routes
+const getClient = (req) => {
+    return req.cookies.access_token ? getAuthClient(req) : supabaseAnon;
+};
+
 // Public endpoint to get materials
 app.get('/api/materials', async (req, res) => {
     try {
-        const { data, error } = await supabaseAdmin
+        const supabase = getClient(req);
+        const { data, error } = await supabase
             .from('materials')
             .select('*')
             .order('created_at', { ascending: false });
         
-        if (error) throw error;
+        if (error) {
+            console.error(error);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
         res.json({ data });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -254,14 +328,19 @@ app.get('/api/materials', async (req, res) => {
 app.get('/api/subjects', async (req, res) => {
     const { branch } = req.query;
     try {
-        const { data, error } = await supabaseAdmin
+        const supabase = getClient(req);
+        const { data, error } = await supabase
             .from('materials')
             .select('subject')
             .eq('branch', branch);
             
-        if (error) throw error;
+        if (error) {
+            console.error(error);
+            return res.status(500).json({ error: 'Internal Server Error' });
+        }
         res.json({ data });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -269,16 +348,20 @@ app.get('/api/subjects', async (req, res) => {
 // Public endpoint to get a single material
 app.get('/api/materials/:id', async (req, res) => {
     try {
-        const { data, error } = await supabaseAdmin
+        const supabase = getClient(req);
+        const { data, error } = await supabase
             .from('materials')
             .select('*')
             .eq('id', req.params.id)
             .single();
         
-        if (error) throw error;
-        if (!data) return res.status(404).json({ error: 'Not found' });
+        if (error) {
+            console.error(error);
+            return res.status(404).json({ error: 'Not found' });
+        }
         res.json({ data });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });
@@ -291,18 +374,25 @@ app.post('/api/materials', requireAuth, uploadLimiter, upload.single('file'), as
         
         if (!file) return res.status(400).json({ error: 'File is required' });
 
-        const fileExt = path.extname(file.originalname);
+        if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
+            return res.status(400).json({ error: 'Invalid file type' });
+        }
+
+        const fileExt = path.extname(file.originalname).replace(/[^a-zA-Z0-9.]/g, '');
         const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}${fileExt}`;
+        // Enforce user directory to prevent path traversal
         const filePath = `${req.user.id}/${fileName}`;
 
-        // Upload to storage using the authenticated client
         const { error: uploadError } = await req.supabase.storage
             .from('materials')
             .upload(filePath, file.buffer, {
                 contentType: file.mimetype
             });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+            console.error(uploadError);
+            return res.status(500).json({ error: 'Upload failed' });
+        }
 
         const { data: { publicUrl } } = req.supabase.storage
             .from('materials')
@@ -320,16 +410,19 @@ app.post('/api/materials', requireAuth, uploadLimiter, upload.single('file'), as
                 college_details,
                 uploader_name,
                 file_url: publicUrl,
-                user_id: req.user.id
+                user_id: req.user.id // Server-side ownership enforcement
             })
             .select();
 
-        if (dbError) throw dbError;
+        if (dbError) {
+            console.error(dbError);
+            return res.status(500).json({ error: 'Database error' });
+        }
         res.json({ data: data[0] });
 
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: error.message || 'Internal Server Error' });
+        res.status(500).json({ error: 'Internal Server Error' });
     }
 });
 
@@ -357,19 +450,26 @@ app.delete('/api/materials/:id', requireAuth, async (req, res) => {
             .delete()
             .eq('id', req.params.id);
             
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+            console.error(deleteError);
+            return res.status(500).json({ error: 'Database error' });
+        }
 
         // Best effort file deletion
         try {
             const urlParts = material.file_url.split('/');
             const filePath = urlParts.slice(urlParts.length - 2).join('/');
-            await req.supabase.storage.from('materials').remove([filePath]);
+            // Prevent traversal by checking it starts with user id
+            if (filePath.startsWith(`${req.user.id}/`)) {
+                await req.supabase.storage.from('materials').remove([filePath]);
+            }
         } catch (e) {
             console.error("Could not delete file", e);
         }
 
         res.json({ success: true });
     } catch (error) {
+        console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
     }
 });

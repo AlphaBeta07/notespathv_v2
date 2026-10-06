@@ -23,44 +23,51 @@ export default function AuthPage() {
         setSuccessMsg(null)
 
         try {
+            let res;
             if (isResetPassword) {
                 if (!email) {
                     throw new Error("Please enter your email to reset password.")
                 }
-                const res = await fetch('/api/auth/reset-password', {
+                res = await fetch('/api/auth/reset-password', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
                 })
-                const data = await res.json()
-                if (!res.ok) throw new Error(data.error || 'Failed to send reset link')
-                
-                setSuccessMsg("Password reset link sent! Check your email.")
             } else if (isLogin) {
-                const res = await fetch('/api/auth/login', {
+                res = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 })
-                const data = await res.json()
-                if (!res.ok) throw new Error(data.error || 'Login failed')
-                
-                // Force AuthContext to reload or navigate
-                window.location.href = '/dashboard'
             } else {
                 if (!email.toLowerCase().endsWith('@gmail.com')) {
                     throw new Error("Please enter valid email to sign up.")
                 }
-                const res = await fetch('/api/auth/signup', {
+                res = await fetch('/api/auth/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 })
-                const data = await res.json()
-                if (!res.ok) throw new Error(data.error || 'Signup failed')
-                
-                window.location.href = '/dashboard'
             }
+
+            const contentType = res.headers.get("content-type");
+            let data;
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                data = await res.json();
+            } else {
+                const text = await res.text();
+                console.error("Non-JSON response from server:", text);
+                throw new Error(res.ok ? "Unexpected response from server" : `Server error: ${res.status} ${res.statusText}`);
+            }
+
+            if (!res.ok) throw new Error(data.error || 'Authentication failed');
+
+            if (isResetPassword) {
+                setSuccessMsg("Password reset link sent! Check your email.");
+            } else {
+                window.location.href = '/dashboard';
+            }
+
         } catch (err: any) {
             setError(err.message)
         } finally {
