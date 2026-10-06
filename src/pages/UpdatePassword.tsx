@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Loader2, Lock, ShieldCheck, AlertCircle } from 'lucide-react'
@@ -17,8 +17,9 @@ export default function UpdatePasswordPage() {
     useEffect(() => {
         // Automatically fetch the session to ensure the user actually came from a recovery link
         const checkSession = async () => {
-            const { data: { session } } = await supabase.auth.getSession()
-            if (!session) {
+            const res = await fetch('/api/auth/session')
+            const { user } = await res.json()
+            if (!user) {
                 // If there's no session, it means the recovery link was invalid or expired
                 // or the user navigated here manually without a valid token.
                 setError("No active session found. If your link expired, please request a new one.")
@@ -34,11 +35,15 @@ export default function UpdatePasswordPage() {
         setSuccessMsg(null)
 
         try {
-            const { error } = await supabase.auth.updateUser({
-                password: password
+            const res = await fetch('/api/auth/update-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password })
             })
-
-            if (error) throw error
+            if (!res.ok) {
+                const err = await res.json()
+                throw new Error(err.error || 'Failed to update password')
+            }
             setSuccessMsg("Password updated successfully! Redirecting...")
             setTimeout(() => {
                 navigate('/dashboard')

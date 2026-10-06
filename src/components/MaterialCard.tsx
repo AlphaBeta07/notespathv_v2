@@ -6,7 +6,7 @@ import { FileText, Bookmark, Share2, Trash2, Loader2, X, Copy, Check } from 'luc
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+
 import { Document, Page, pdfjs } from 'react-pdf'
 
 // Set worker source
@@ -44,19 +44,14 @@ export function MaterialCard({ material, onDelete }: MaterialCardProps) {
         setIsDeleting(true)
         setShowDeleteConfirm(false)
         try {
-            const urlObj = new URL(material.file_url)
-            const pathSegments = urlObj.pathname.split('/')
-            const fileName = pathSegments[pathSegments.length - 1]
-            const filePath = `${material.user_id}/${fileName}`
-
-            await supabase.storage.from('materials').remove([filePath])
-
-            const { error } = await supabase
-                .from('materials')
-                .delete()
-                .eq('id', material.id)
-
-            if (error) throw error
+            const res = await fetch(`/api/materials/${material.id}`, {
+                method: 'DELETE',
+            })
+            
+            if (!res.ok) {
+                const err = await res.json()
+                throw new Error(err.error || 'Failed to delete')
+            }
 
             if (onDelete) onDelete(material.id)
         } catch (error) {

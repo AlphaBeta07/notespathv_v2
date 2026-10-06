@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Loader2, Camera } from 'lucide-react'
-import { supabase } from '../lib/supabase'
+
 import { User } from '@supabase/supabase-js'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
@@ -60,34 +60,23 @@ export function EditProfileModal({ isOpen, onClose, user }: EditProfileModalProp
         setLoading(true)
 
         try {
-            let newAvatarUrl = user.user_metadata?.avatar_url
+            const formData = new FormData()
+            formData.append('username', trimmedUsername)
+            if (avatarFile) formData.append('file', avatarFile)
 
-            if (avatarFile) {
-                const fileExt = avatarFile.name.split('.').pop()
-                const fileName = `avatars/${user.id}-${Date.now()}.${fileExt}`
-
-                const { error: uploadError } = await supabase.storage
-                    .from('materials') // Reusing the materials bucket since we know it exists
-                    .upload(fileName, avatarFile)
-
-                if (uploadError) throw uploadError
-
-                const { data: { publicUrl } } = supabase.storage
-                    .from('materials')
-                    .getPublicUrl(fileName)
-
-                newAvatarUrl = publicUrl
-            }
-
-            const { error: updateError } = await supabase.auth.updateUser({
-                data: {
-                    username: trimmedUsername,
-                    avatar_url: newAvatarUrl
-                }
+            const res = await fetch('/api/auth/update-profile', {
+                method: 'POST',
+                body: formData
             })
 
-            if (updateError) throw updateError
+            if (!res.ok) {
+                const err = await res.json()
+                throw new Error(err.error || 'Failed to update profile')
+            }
 
+            // Force reload to update auth context
+            window.location.reload()
+            
             onClose()
         } catch (err: any) {
             console.error(err)

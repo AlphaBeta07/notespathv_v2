@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+
 import { Material } from '../types'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { Button } from '../components/ui/button'
@@ -23,13 +23,10 @@ export default function ViewMaterial() {
         const fetchMaterial = async () => {
             if (!id) return
             try {
-                const { data, error } = await supabase
-                    .from('materials')
-                    .select('*')
-                    .eq('id', id)
-                    .single()
-
-                if (error) throw error
+                const res = await fetch(`/api/materials/${id}`)
+                if (!res.ok) throw new Error('Failed to fetch material')
+                
+                const { data } = await res.json()
                 setMaterial(data)
             } catch (error) {
                 console.error('Error fetching material:', error)

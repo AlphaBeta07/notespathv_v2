@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { Link } from 'react-router-dom'
+
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Loader2, ArrowLeft, Mail, Lock, ShieldCheck, UserPlus, LogIn, AlertCircle, CheckCircle } from 'lucide-react'
@@ -15,7 +15,6 @@ export default function AuthPage() {
     const [isResetPassword, setIsResetPassword] = useState(false)
     const [error, setError] = useState<string | null>(null)
     const [successMsg, setSuccessMsg] = useState<string | null>(null)
-    const navigate = useNavigate()
 
     const handleAuth = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -28,31 +27,39 @@ export default function AuthPage() {
                 if (!email) {
                     throw new Error("Please enter your email to reset password.")
                 }
-                const { error } = await supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: `${window.location.origin}/update-password`,
+                const res = await fetch('/api/auth/reset-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
                 })
-                if (error) throw error
+                const data = await res.json()
+                if (!res.ok) throw new Error(data.error || 'Failed to send reset link')
+                
                 setSuccessMsg("Password reset link sent! Check your email.")
             } else if (isLogin) {
-                const { error } = await supabase.auth.signInWithPassword({
-                    email,
-                    password,
+                const res = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
                 })
-                if (error) throw error
-                navigate('/dashboard')
+                const data = await res.json()
+                if (!res.ok) throw new Error(data.error || 'Login failed')
+                
+                // Force AuthContext to reload or navigate
+                window.location.href = '/dashboard'
             } else {
                 if (!email.toLowerCase().endsWith('@gmail.com')) {
                     throw new Error("Please enter valid email to sign up.")
                 }
-                const { error } = await supabase.auth.signUp({
-                    email,
-                    password,
+                const res = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
                 })
-                if (error) throw error
-                // For simple email/pass, auto login or message to check email
-                // If Supabase confirms immediately (disable email confirm), we might need auto sigin.
-                // Usually signUp returns session if auto-confirm is on.
-                navigate('/dashboard')
+                const data = await res.json()
+                if (!res.ok) throw new Error(data.error || 'Signup failed')
+                
+                window.location.href = '/dashboard'
             }
         } catch (err: any) {
             setError(err.message)

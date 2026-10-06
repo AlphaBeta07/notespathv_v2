@@ -1,9 +1,8 @@
 import { createContext, useContext, useEffect, useState } from 'react'
-import { Session, User } from '@supabase/supabase-js'
-import { supabase } from '../lib/supabase'
+import { User } from '@supabase/supabase-js'
 
 type AuthContextType = {
-    session: Session | null
+    session: any | null
     user: User | null
     loading: boolean
     signOut: () => Promise<void>
@@ -12,32 +11,36 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [session, setSession] = useState<Session | null>(null)
     const [user, setUser] = useState<User | null>(null)
     const [loading, setLoading] = useState(true)
 
+    const checkSession = async () => {
+        try {
+            const res = await fetch('/api/auth/session')
+            if (res.ok) {
+                const data = await res.json()
+                setUser(data.user)
+            } else {
+                setUser(null)
+            }
+        } catch (e) {
+            setUser(null)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session)
-            setUser(session?.user ?? null)
-            setLoading(false)
-        })
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session)
-            setUser(session?.user ?? null)
-            setLoading(false)
-        })
-
-        return () => subscription.unsubscribe()
+        checkSession()
     }, [])
 
     const signOut = async () => {
-        await supabase.auth.signOut()
+        await fetch('/api/auth/logout', { method: 'POST' })
+        setUser(null)
     }
 
     const value = {
-        session,
+        session: user ? { user } : null,
         user,
         loading,
         signOut,

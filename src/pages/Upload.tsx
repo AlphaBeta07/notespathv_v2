@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+
 import { Button } from '../components/ui/button'
 import { Input } from '../components/ui/input'
 import { Loader2, UploadCloud, ArrowLeft, CheckCircle2 } from 'lucide-react'
@@ -70,17 +70,14 @@ export default function Upload() {
 
             try {
                 // 3. Fetch from DB
-                const { data, error } = await supabase
-                    .from('materials')
-                    .select('subject')
-                    .eq('branch', branch)
-
-                if (error) throw error
-
-                if (data) {
-                    data.forEach(item => {
-                        if (item.subject) combinedSubjects.add(item.subject)
-                    })
+                const res = await fetch(`/api/subjects?branch=${encodeURIComponent(branch)}`)
+                if (res.ok) {
+                    const { data } = await res.json()
+                    if (data) {
+                        data.forEach((item: any) => {
+                            if (item.subject) combinedSubjects.add(item.subject)
+                        })
+                    }
                 }
             } catch (err) {
                 console.error('Error fetching subjects:', err)
@@ -143,39 +140,25 @@ export default function Upload() {
         setError(null)
 
         try {
-            const fileExt = file.name.split('.').pop()
-            const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`
-            const filePath = `${user.id}/${fileName}`
+            const formData = new FormData()
+            formData.append('file', file)
+            formData.append('title', title)
+            formData.append('branch', branch)
+            formData.append('subject', subject)
+            if (semester) formData.append('semester', semester)
+            if (module) formData.append('module', module)
+            if (college) formData.append('college_details', college)
+            if (uploaderName) formData.append('uploader_name', uploaderName)
 
-            // 1. Upload to Storage
-            const { error: uploadError } = await supabase.storage
-                .from('materials')
-                .upload(filePath, file)
+            const res = await fetch('/api/materials', {
+                method: 'POST',
+                body: formData
+            })
 
-            if (uploadError) throw uploadError
-
-            // 2. Get Public URL
-            const { data: { publicUrl } } = supabase.storage
-                .from('materials')
-                .getPublicUrl(filePath)
-
-            // 3. Insert into Database
-            const { error: dbError } = await supabase
-                .from('materials')
-                .insert({
-                    title: title,
-                    description: college,
-                    file_url: publicUrl,
-                    user_id: user.id,
-                    branch,
-                    subject,
-                    semester,
-                    module,
-                    college_details: college,
-                    uploader_name: uploaderName
-                })
-
-            if (dbError) throw dbError
+            if (!res.ok) {
+                const err = await res.json()
+                throw new Error(err.error || 'Upload failed')
+            }
 
             navigate('/')
         } catch (err: any) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+
 import { Material } from '../types'
 import { MaterialCard } from '../components/MaterialCard'
 import { Button } from '../components/ui/button'
@@ -19,15 +19,10 @@ export default function Dashboard() {
     const fetchMaterials = async () => {
         try {
             setLoading(true)
-            const { data, error } = await supabase
-                .from('materials')
-                .select('*')
-                .order('created_at', { ascending: false })
-
-            if (error) {
-                throw error
-            }
-
+            const res = await fetch('/api/materials')
+            if (!res.ok) throw new Error('Failed to fetch materials')
+            
+            const { data } = await res.json()
             setMaterials(data || [])
         } catch (error) {
             console.error('Error fetching materials:', error)

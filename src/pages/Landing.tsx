@@ -2,7 +2,7 @@ import { Button } from '../components/ui/button'
 import { motion } from 'framer-motion'
 import { Search, ChevronDown } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { supabase } from '../lib/supabase'
+
 import { Material } from '../types'
 import { MaterialCard } from '../components/MaterialCard'
 import { DotBackground } from '../components/DotBackground'
@@ -46,15 +46,10 @@ export default function LandingPage() {
     const fetchMaterials = async () => {
         try {
             setLoading(true)
-            const { data, error } = await supabase
-                .from('materials')
-                .select('*')
-                .order('created_at', { ascending: false })
-
-            if (error) {
-                throw error
-            }
-
+            const res = await fetch('/api/materials')
+            if (!res.ok) throw new Error('Failed to fetch materials')
+            
+            const { data } = await res.json()
             setMaterials(data || [])
             setFilteredMaterials(data || [])
         } catch (error) {
