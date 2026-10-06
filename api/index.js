@@ -1,5 +1,7 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import multer from 'multer';
 import { createClient } from '@supabase/supabase-js';
@@ -21,16 +23,47 @@ app.use(cors({
 app.use(express.json());
 app.use(cookieParser());
 
+// Security Headers using Helmet
+app.use(helmet());
+
 // Disable X-Powered-By
 app.disable('x-powered-by');
 
-// Add Security Headers
+// Add Custom Security Headers (Helmet handles most, but setting specifically as requested)
 app.use((req, res, next) => {
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('X-Frame-Options', 'DENY');
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
     next();
 });
+
+// Rate limiting configurations
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 200, 
+    message: { error: 'Too many requests from this IP, please try again after 15 minutes' },
+    standardHeaders: true, 
+    legacyHeaders: false, 
+});
+
+const authLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 20, 
+    message: { error: 'Too many authentication attempts from this IP, please try again after an hour' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+const uploadLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 30, 
+    message: { error: 'Too many uploads from this IP, please try again after an hour' },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Apply general rate limit to all requests
+app.use('/api', generalLimiter);
 
 const upload = multer({ 
     storage: multer.memoryStorage(),
@@ -83,6 +116,9 @@ const cookieOptions = {
 };
 
 // --- AUTH ROUTES ---
+
+// Use authLimiter for all auth routes
+app.use('/api/auth', authLimiter);
 
 app.post('/api/auth/login', async (req, res) => {
     const { email, password } = req.body;
@@ -248,7 +284,7 @@ app.get('/api/materials/:id', async (req, res) => {
 });
 
 // Protected endpoint to upload a material
-app.post('/api/materials', requireAuth, upload.single('file'), async (req, res) => {
+app.post('/api/materials', requireAuth, uploadLimiter, upload.single('file'), async (req, res) => {
     try {
         const { title, branch, subject, semester, module, college_details, uploader_name } = req.body;
         const file = req.file;
