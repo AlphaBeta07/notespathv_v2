@@ -15,8 +15,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const [loading, setLoading] = useState(true)
 
     const checkSession = async () => {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 2500)
+
         try {
-            const res = await fetch('/api/auth/session')
+            const res = await fetch('/api/auth/session', { signal: controller.signal })
+            clearTimeout(timeoutId)
             if (res.ok) {
                 const data = await res.json()
                 setUser(data.user)
@@ -24,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUser(null)
             }
         } catch (e) {
+            clearTimeout(timeoutId)
             setUser(null)
         } finally {
             setLoading(false)
@@ -35,8 +40,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, [])
 
     const signOut = async () => {
-        await fetch('/api/auth/logout', { method: 'POST' })
-        setUser(null)
+        try {
+            await fetch('/api/auth/logout', { method: 'POST' })
+        } catch (e) {
+            console.error('Logout error:', e)
+        } finally {
+            setUser(null)
+        }
     }
 
     const value = {
@@ -48,7 +58,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return (
         <AuthContext.Provider value={value}>
-            {!loading && children}
+            {loading ? (
+                <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                    <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+            ) : (
+                children
+            )}
         </AuthContext.Provider>
     )
 }

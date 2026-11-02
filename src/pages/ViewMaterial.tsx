@@ -22,13 +22,17 @@ export default function ViewMaterial() {
     useEffect(() => {
         const fetchMaterial = async () => {
             if (!id) return
+            const controller = new AbortController()
+            const timeoutId = setTimeout(() => controller.abort(), 3000)
             try {
-                const res = await fetch(`/api/materials/${id}`)
+                const res = await fetch(`/api/materials/${id}`, { signal: controller.signal })
+                clearTimeout(timeoutId)
                 if (!res.ok) throw new Error('Failed to fetch material')
                 
                 const { data } = await res.json()
                 setMaterial(data)
             } catch (error) {
+                clearTimeout(timeoutId)
                 console.error('Error fetching material:', error)
             } finally {
                 setLoading(false)

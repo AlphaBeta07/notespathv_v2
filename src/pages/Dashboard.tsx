@@ -17,14 +17,18 @@ export default function Dashboard() {
     }, [user])
 
     const fetchMaterials = async () => {
+        const controller = new AbortController()
+        const timeoutId = setTimeout(() => controller.abort(), 3000)
         try {
             setLoading(true)
-            const res = await fetch('/api/materials')
+            const res = await fetch('/api/materials', { signal: controller.signal })
+            clearTimeout(timeoutId)
             if (!res.ok) throw new Error('Failed to fetch materials')
             
             const { data } = await res.json()
             setMaterials(data || [])
         } catch (error) {
+            clearTimeout(timeoutId)
             console.error('Error fetching materials:', error)
         } finally {
             setLoading(false)

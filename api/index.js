@@ -11,7 +11,7 @@ import path from 'path';
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 // Security Middleware
 app.use(cors({
@@ -379,7 +379,14 @@ export default app;
 
 // Listen if not on serverless
 if (process.env.NODE_ENV !== 'production') {
-    app.listen(port, () => {
-        console.log(`Express API running on port ${port}`);
+    const server = app.listen(port, '127.0.0.1', () => {
+        console.log(`Express API running on http://127.0.0.1:${port}`);
+    });
+    server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.error(`Port ${port} is in use. Please specify a different PORT in .env or kill the process on port ${port}.`);
+        } else {
+            console.error('Server error:', err);
+        }
     });
 }
